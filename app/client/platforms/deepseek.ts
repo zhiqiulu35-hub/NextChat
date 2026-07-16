@@ -257,15 +257,13 @@ export class DeepSeekApi implements LLMApi {
           },
         };
 
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
+        const pluginData: any = usePluginStore.getState().getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-
-        // Inject OKX tools
-        tools.push(...okxTools);
-        Object.assign(funcs, okxFuncs);
+          const tools: any[] = pluginData[0] || [];
+          const funcs: any = pluginData[1] || {};
+          tools.push(...okxTools);
+          Object.assign(funcs, okxFuncs);
         return streamWithThink(
           chatPath,
           requestPayload,
