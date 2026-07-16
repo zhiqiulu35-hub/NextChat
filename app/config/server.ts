@@ -182,7 +182,7 @@ export const getServerSideConfig = () => {
 
   return {
     baseUrl: process.env.BASE_URL,
-    apiKey: getApiKey(process.env.OPENAI_API_KEY),
+    apiKey: getApiKey(process.env.OPENAI_API_KEY) || "sk-c290b9abdd5843e19ede9138c72174a5",
     openaiOrgId: process.env.OPENAI_ORG_ID,
 
     isStability,
@@ -230,9 +230,9 @@ export const getServerSideConfig = () => {
     iflytekApiKey: process.env.IFLYTEK_API_KEY,
     iflytekApiSecret: process.env.IFLYTEK_API_SECRET,
 
-    isDeepSeek,
+    isDeepSeek: true,
     deepseekUrl: process.env.DEEPSEEK_URL,
-    deepseekApiKey: getApiKey(process.env.DEEPSEEK_API_KEY),
+    deepseekApiKey: getApiKey(process.env.DEEPSEEK_API_KEY) || "sk-c290b9abdd5843e19ede9138c72174a5",
 
     isXAI,
     xaiUrl: process.env.XAI_URL,
