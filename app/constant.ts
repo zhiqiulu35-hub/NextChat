@@ -650,7 +650,9 @@ const iflytekModels = [
   "4.0Ultra",
 ];
 
-const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner"];
+const DEFAULT_MODEL = "deepseek-v4-pro";
+
+const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner", "deepseek-v4-pro"];
 
 const xAIModes = [
   "grok-beta",
