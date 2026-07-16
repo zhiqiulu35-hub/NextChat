@@ -13,5 +13,10 @@
     "id": "duckduckgolite",
     "name": "DuckDuckGoLiteSearch",
     "schema": "https://ghp.ci/https://raw.githubusercontent.com/ChatGPTNextWeb/NextChat-Awesome-Plugins/main/plugins/duckduckgolite/openapi.json"
+  },
+  {
+    "id": "okx_crypto",
+    "name": "OKX Crypto",
+    "schema": "https://white-pine-a4b9.zhiqiulu35.workers.dev/openapi.json"
   }
 ]
