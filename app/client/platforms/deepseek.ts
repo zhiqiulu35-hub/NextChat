@@ -217,14 +217,14 @@ export class DeepSeekApi implements LLMApi {
         ];
 
         const okxFuncs = {
-          get_ticker: async (args) => {
+          get_ticker: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL + "/api/ticker?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
             } catch (e) { return { error: e.message }; }
           },
-          get_candles: async (args) => {
+          get_candles: async (args: any) => {
             try {
               const bar = args.bar || "1H";
               const limit = args.limit || 20;
@@ -233,7 +233,7 @@ export class DeepSeekApi implements LLMApi {
               return data;
             } catch (e) { return { error: e.message }; }
           },
-          get_orderbook: async (args) => {
+          get_orderbook: async (args: any) => {
             try {
               const size = args.size || 20;
               const res = await fetch(OKX_WORKER_URL + "/api/orderbook?instId=" + encodeURIComponent(args.instId) + "&size=" + size);
@@ -241,14 +241,14 @@ export class DeepSeekApi implements LLMApi {
               return data;
             } catch (e) { return { error: e.message }; }
           },
-          get_funding_rate: async (args) => {
+          get_funding_rate: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL + "/api/funding?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
             } catch (e) { return { error: e.message }; }
           },
-          get_market_overview: async (args) => {
+          get_market_overview: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL + "/api/overview?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
