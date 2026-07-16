@@ -224,6 +224,7 @@ export function stream(
       if (!running && runTools.length > 0) {
         const toolCallMessage = {
           role: "assistant",
+          content: null,
           tool_calls: [...runTools],
         };
         running = true;
@@ -450,6 +451,7 @@ export function streamWithThink(
       if (!running && runTools.length > 0) {
         const toolCallMessage = {
           role: "assistant",
+          content: null,
           tool_calls: [...runTools],
         };
         running = true;
