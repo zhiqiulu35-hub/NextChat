@@ -137,11 +137,135 @@ export class DeepSeekApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
+        // ===== OKX 加密货币数据工具 =====
+        const OKX_WORKER_URL = "https://white-pine-a4b9.zhiqiulu35.workers.dev";
+
+        const okxTools = [
+          {
+            type: "function",
+            function: {
+              name: "get_ticker",
+              description: "获取加密货币实时行情：最新价、24h涨跌幅、最高价、最低价、成交量",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT, ETH-USDT, SOL-USDT" },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_candles",
+              description: "获取K线/蜡烛图数据，用于技术分析和趋势判断",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  bar: { type: "string", description: "K线周期：1m/5m/15m/1H/4H/1D/1W", default: "1H" },
+                  limit: { type: "integer", description: "返回K线数量", default: 20 },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_orderbook",
+              description: "获取订单簿深度数据，查看买卖盘口挂单情况",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  size: { type: "integer", description: "深度档位数量", default: 20 },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_funding_rate",
+              description: "获取永续合约资金费率，判断市场多空情绪",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "合约交易对，如 BTC-USDT-SWAP" },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_market_overview",
+              description: "获取加密货币综合市场概况：同时查询行情、K线趋势、深度数据",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+        ];
+
+        const okxFuncs = {
+          get_ticker: async (args) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "/api/ticker?instId=" + encodeURIComponent(args.instId));
+              const data = await res.json();
+              return data;
+            } catch (e) { return { error: e.message }; }
+          },
+          get_candles: async (args) => {
+            try {
+              const bar = args.bar || "1H";
+              const limit = args.limit || 20;
+              const res = await fetch(OKX_WORKER_URL + "/api/candles?instId=" + encodeURIComponent(args.instId) + "&bar=" + bar + "&limit=" + limit);
+              const data = await res.json();
+              return data;
+            } catch (e) { return { error: e.message }; }
+          },
+          get_orderbook: async (args) => {
+            try {
+              const size = args.size || 20;
+              const res = await fetch(OKX_WORKER_URL + "/api/orderbook?instId=" + encodeURIComponent(args.instId) + "&size=" + size);
+              const data = await res.json();
+              return data;
+            } catch (e) { return { error: e.message }; }
+          },
+          get_funding_rate: async (args) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "/api/funding?instId=" + encodeURIComponent(args.instId));
+              const data = await res.json();
+              return data;
+            } catch (e) { return { error: e.message }; }
+          },
+          get_market_overview: async (args) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "/api/overview?instId=" + encodeURIComponent(args.instId));
+              const data = await res.json();
+              return data;
+            } catch (e) { return { error: e.message }; }
+          },
+        };
+
+        const [pluginTools, pluginFuncs] = usePluginStore
           .getState()
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
+
+        const tools = [...okxTools, ...pluginTools];
+        const funcs = { ...okxFuncs, ...pluginFuncs };
+
         return streamWithThink(
           chatPath,
           requestPayload,
