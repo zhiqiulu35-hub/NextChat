@@ -222,7 +222,7 @@ export class DeepSeekApi implements LLMApi {
               const res = await fetch(OKX_WORKER_URL + "/api/ticker?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
-            } catch (e) { return { error: e.message }; }
+            } catch (e) { return { error: String(e) }; }
           },
           get_candles: async (args: any) => {
             try {
@@ -231,7 +231,7 @@ export class DeepSeekApi implements LLMApi {
               const res = await fetch(OKX_WORKER_URL + "/api/candles?instId=" + encodeURIComponent(args.instId) + "&bar=" + bar + "&limit=" + limit);
               const data = await res.json();
               return data;
-            } catch (e) { return { error: e.message }; }
+            } catch (e) { return { error: String(e) }; }
           },
           get_orderbook: async (args: any) => {
             try {
@@ -239,21 +239,21 @@ export class DeepSeekApi implements LLMApi {
               const res = await fetch(OKX_WORKER_URL + "/api/orderbook?instId=" + encodeURIComponent(args.instId) + "&size=" + size);
               const data = await res.json();
               return data;
-            } catch (e) { return { error: e.message }; }
+            } catch (e) { return { error: String(e) }; }
           },
           get_funding_rate: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL + "/api/funding?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
-            } catch (e) { return { error: e.message }; }
+            } catch (e) { return { error: String(e) }; }
           },
           get_market_overview: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL + "/api/overview?instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
-            } catch (e) { return { error: e.message }; }
+            } catch (e) { return { error: String(e) }; }
           },
         };
 
