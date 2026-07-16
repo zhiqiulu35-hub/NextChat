@@ -139,6 +139,7 @@ export class DeepSeekApi implements LLMApi {
       if (shouldStream) {
         // ===== OKX 加密货币数据工具 =====
         const OKX_WORKER_URL = "https://white-pine-a4b9.zhiqiulu35.workers.dev";
+        const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
 
         const okxTools = [
           {
@@ -216,6 +217,133 @@ export class DeepSeekApi implements LLMApi {
           },
         ];
 
+        // ===== 交易工具（独立 Worker） =====
+        const tradeTools = [
+          {
+            type: "function",
+            function: {
+              name: "trade_place_limit_order",
+              description: "下限价单 - 买入或卖出加密货币。首次调用返回预览确认，确认后再调用一次（confirmed=true）即可执行下单。",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  side: { type: "string", description: "buy=买入 / sell=卖出", enum: ["buy", "sell"] },
+                  px: { type: "string", description: "限价（价格）" },
+                  sz: { type: "string", description: "数量" },
+                  confirmed: { type: "boolean", description: "是否确认下单，首次调用不要传这个，确认后再传 true" },
+                },
+                required: ["instId", "side", "px", "sz"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "trade_cancel_order",
+              description: "撤销一笔未成交的委托单",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  ordId: { type: "string", description: "订单ID" },
+                },
+                required: ["instId", "ordId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "trade_get_order",
+              description: "查询委托单状态",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  ordId: { type: "string", description: "订单ID" },
+                },
+                required: ["instId", "ordId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "trade_get_balance",
+              description: "查询账户余额和资产分布",
+              parameters: {
+                type: "object",
+                properties: {},
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "trade_get_positions",
+              description: "查询当前持仓（合约）",
+              parameters: {
+                type: "object",
+                properties: {},
+              },
+            },
+          },
+        ];
+
+        const tradeFuncs = {
+          trade_place_limit_order: async (args: any) => {
+            try {
+              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tool: "trade_place_limit_order", params: args }),
+              });
+              return res.json();
+            } catch (e) { return { error: String(e) }; }
+          },
+          trade_cancel_order: async (args: any) => {
+            try {
+              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tool: "trade_cancel_order", params: args }),
+              });
+              return res.json();
+            } catch (e) { return { error: String(e) }; }
+          },
+          trade_get_order: async (args: any) => {
+            try {
+              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tool: "trade_get_order", params: args }),
+              });
+              return res.json();
+            } catch (e) { return { error: String(e) }; }
+          },
+          trade_get_balance: async (args: any) => {
+            try {
+              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tool: "trade_get_balance", params: {} }),
+              });
+              return res.json();
+            } catch (e) { return { error: String(e) }; }
+          },
+          trade_get_positions: async (args: any) => {
+            try {
+              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tool: "trade_get_positions", params: {} }),
+              });
+              return res.json();
+            } catch (e) { return { error: String(e) }; }
+          },
+        };
+
         const okxFuncs = {
           get_ticker: async (args: any) => {
             try {
@@ -262,8 +390,8 @@ export class DeepSeekApi implements LLMApi {
           );
           const tools: any[] = pluginData[0] || [];
           const funcs: any = pluginData[1] || {};
-          tools.push(...okxTools);
-          Object.assign(funcs, okxFuncs);
+          tools.push(...okxTools, ...tradeTools);
+          Object.assign(funcs, okxFuncs, tradeFuncs);
         return streamWithThink(
           chatPath,
           requestPayload,
