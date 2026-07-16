@@ -1,0 +1,85 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OKX Crypto API",
+    "description": "从OKX交易所获取加密货币实时市场数据，包括行情价格、K线趋势、订单簿深度、资金费率等",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://white-pine-a4b9.zhiqiulu35.workers.dev"
+    }
+  ],
+  "paths": {
+    "/api/call": {
+      "post": {
+        "operationId": "getCryptoData",
+        "summary": "获取加密货币市场数据。支持：get_ticker(实时行情), get_candles(K线), get_orderbook(深度), get_funding_rate(资金费率), get_market_overview(综合概况)",
+        "description": "调用此接口获取OKX交易所的加密货币市场数据。通过tool参数指定要查询的数据类型，通过params.instId指定交易对。",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tool", "params"],
+                "properties": {
+                  "tool": {
+                    "type": "string",
+                    "description": "工具名称：get_ticker(实时行情) / get_candles(K线) / get_orderbook(深度) / get_funding_rate(资金费率) / get_market_overview(综合概况)",
+                    "enum": ["get_ticker", "get_candles", "get_orderbook", "get_funding_rate", "get_market_overview"]
+                  },
+                  "params": {
+                    "type": "object",
+                    "required": ["instId"],
+                    "properties": {
+                      "instId": {
+                        "type": "string",
+                        "description": "交易对，如 BTC-USDT, ETH-USDT, SOL-USDT, DOGE-USDT 等"
+                      },
+                      "bar": {
+                        "type": "string",
+                        "description": "K线周期（仅get_candles使用）：1m/5m/15m/30m/1H/2H/4H/6H/12H/1D/1W/1M，默认1H"
+                      },
+                      "limit": {
+                        "type": "integer",
+                        "description": "返回数量（仅get_candles使用），默认20，最大300"
+                      },
+                      "size": {
+                        "type": "integer",
+                        "description": "深度档位（仅get_orderbook使用），默认20，最大400"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功返回数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "object", "description": "返回的数据" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "参数错误"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    }
+  }
+}
