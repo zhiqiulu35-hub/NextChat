@@ -17,6 +17,6 @@
   {
     "id": "okx_crypto",
     "name": "OKX Crypto",
-    "schema": "https://white-pine-a4b9.zhiqiulu35.workers.dev/openapi.json"
+    "schema": "/openapi-okx.json"
   }
 ]
