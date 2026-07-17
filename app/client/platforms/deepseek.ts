@@ -214,8 +214,78 @@ export class DeepSeekApi implements LLMApi {
                 required: ["instId"],
               },
             },
+          },,
+        {
+            type: "function",
+            function: {
+              name: "get_stock_quote",
+              description: "查询全球股票/ETF/指数实时股价。美股直接输代码如AAPL,NVDA,TSLA,MSFT,GOOG,AMZN,META。港股加.HK如0700.HK(腾讯)。A股沪市.SS如600519.SS(茅台)。深市.SZ如000001.SZ。指数加^如^GSPC(标普500),^HSI(恒生),^N225(日经)。可批量查多个用逗号分隔",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", description: "股票代码：AAPL / NVDA / TSLA / 0700.HK / 600519.SS / ^GSPC / AAPL,NVDA,MSFT" },
+                },
+                required: ["symbol"],
+              },
+            },
           },
-        ];
+          {
+            type: "function",
+            function: {
+              name: "get_stock_chart",
+              description: "获取股票历史价格走势数据(OHLCV)",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", description: "股票代码如 AAPL" },
+                  range: { type: "string", description: "时间范围：1d/5d/1mo/3mo/6mo/1y/5y/max", default: "1mo" },
+                  interval: { type: "string", description: "数据间隔：1m/5m/1h/1d/1wk/1mo" },
+                },
+                required: ["symbol"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "search_stocks",
+              description: "搜索股票/ETF/基金，根据关键词找到对应代码",
+              parameters: {
+                type: "object",
+                properties: {
+                  keyword: { type: "string", description: "搜索关键词如 Apple/腾讯/比特币ETF/标普500" },
+                  limit: { type: "integer", description: "返回数量", default: 8 },
+                },
+                required: ["keyword"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_major_indices",
+              description: "查询全球主要股票指数实时行情：标普500、道琼斯、纳斯达克、恒生指数、日经225、上证指数、富时100等16个主要指数",
+              parameters: {
+                type: "object",
+                properties: {},
+                required: [],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_sector_performance",
+              description: "查询美股主要板块/行业表现：科技(XLK)、金融(XLF)、医疗(XLV)、能源(XLE)、半导体(SMH)、生物科技(IBB)等",
+              parameters: {
+                type: "object",
+                properties: {},
+                required: [],
+              },
+            },
+          },
+        
+      ]
 
         // ===== 交易工具（独立 Worker） =====
         const tradeTools = [
