@@ -139,7 +139,7 @@ export class DeepSeekApi implements LLMApi {
       if (shouldStream) {
         // ===== OKX 加密货币数据工具 =====
         const OKX_WORKER_URL = "/api/finance";
-        // const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
+        const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
 
         const okxTools = [
           {
@@ -221,11 +221,11 @@ export class DeepSeekApi implements LLMApi {
         type: "function" as const,
         function: {
           name: "get_stock_quote",
-          description: "查询全球股票/ETF/指数实时股价。美股直接输代码如AAPL,NVDA,TSLA,MSFT,GOOG,AMZN,META。港股加.HK如0700.HK(腾讯),9988.HK(阿里)。A股沪市.SS如600519.SS(茅台)。深市.SZ如000001.SZ。指数加^如^GSPC(标普500),^DJI(道琼斯),^IXIC(纳斯达克),^HSI(恒生指数),^N225(日经225)。可批量查询多个用逗号分隔",
+          description: "查询全球股票/ETF/指数实时股价。美股直接输代码如AAPL,NVDA,TSLA。港股加.HK如0700.HK(腾讯)。A股沪市.SS如600519.SS(茅台)。指数加^如^GSPC(标普500),^HSI(恒生指数)。可批量查询用逗号分隔",
           parameters: {
             type: "object",
             properties: {
-              symbol: { type: "string", description: "股票代码。美股如AAPL,NVDA,TSLA。港股0700.HK。A股600519.SS。指数^GSPC。可批量逗号分隔" },
+              symbol: { type: "string", description: "股票代码。美股AAPL/NVDA/TSLA。港股0700.HK。A股600519.SS。指数^GSPC。可批量逗号分隔" },
             },
             required: ["symbol"],
           },
@@ -255,7 +255,7 @@ export class DeepSeekApi implements LLMApi {
           parameters: {
             type: "object",
             properties: {
-              keyword: { type: "string", description: "搜索关键词如Apple/腾讯/茅台" },
+              keyword: { type: "string", description: "搜索关键词如Apple" },
               limit: { type: "integer", description: "返回数量" },
             },
             required: ["keyword"],
@@ -413,45 +413,7 @@ export class DeepSeekApi implements LLMApi {
               const res = await fetch(OKX_WORKER_URL + "?tool=get_ticker&instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e)
-          // ===== 股票/指数查询函数实现 =====
-          get_stock_quote: async (args: any) => {
-            try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_quote&symbol=" + encodeURIComponent(args.symbol));
-              const data = await res.json();
-              return data?.data || data;
             } catch (e) { return { error: String(e) }; }
-          },
-          get_stock_chart: async (args: any) => {
-            try {
-              const range = args.range || "1mo";
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_chart&symbol=" + encodeURIComponent(args.symbol) + "&range=" + range);
-              const data = await res.json();
-              return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
-          },
-          search_stocks: async (args: any) => {
-            try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=search_securities&keyword=" + encodeURIComponent(args.keyword));
-              const data = await res.json();
-              return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
-          },
-          get_major_indices: async (args: any) => {
-            try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_major_indices");
-              const data = await res.json();
-              return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
-          },
-          get_sector_performance: async (args: any) => {
-            try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_sector_performance");
-              const data = await res.json();
-              return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
-          },
- }; }
           },
           get_candles: async (args: any) => {
             try {
@@ -482,6 +444,39 @@ export class DeepSeekApi implements LLMApi {
               const res = await fetch(OKX_WORKER_URL + "?tool=get_market_overview&instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
+            } catch (e) { return { error: String(e) }; }
+          },
+        
+
+          // ===== 股票/指数查询 =====
+          get_stock_quote: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_quote&symbol=" + encodeURIComponent(args.symbol));
+              const data = await res.json(); return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          get_stock_chart: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_chart&symbol=" + encodeURIComponent(args.symbol) + "&range=" + (args.range||"1mo"));
+              const data = await res.json(); return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          search_stocks: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=search_securities&keyword=" + encodeURIComponent(args.keyword));
+              const data = await res.json(); return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          get_major_indices: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_major_indices");
+              const data = await res.json(); return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          get_sector_performance: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_sector_performance");
+              const data = await res.json(); return data?.data || data;
             } catch (e) { return { error: String(e) }; }
           },
         };
