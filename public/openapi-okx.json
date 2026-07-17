@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "全球金融(加密币+股票+指数+交易)",
-    "description": "【加密货币+全球股票+交易】查询加密货币、美股、港股、A股、指数、板块。同时支持OKX交易所下单交易。\n\n## 加密货币（OKX）\n支持所有OKX交易对：BTC-USDT, ETH-USDT, OKB-USDT, SOL-USDT, DOGE-USDT, XRP-USDT, ADA-USDT, AVAX-USDT, DOT-USDT, LINK-USDT, MATIC-USDT, UNI-USDT, TRX-USDT, APT-USDT, SUI-USDT, PEPE-USDT, WIF-USDT, BONK-USDT 等\n\n## 全球股票（Yahoo Finance）\n- 美股：AAPL, TSLA, NVDA, MSFT, GOOG, AMZN, META, JPM, V, MA, JNJ, WMT, PG, DIS, NFLX, ADBE, CRM, INTC, AMD, BAC, KO, NKE, BA, ORCL, ABNB, UBER, COIN, MSTR, PLTR, HOOD 等全部纽交所/纳斯达克股票\n- 港股：0700.HK(腾讯), 9988.HK(阿里), 0005.HK(汇丰), 1299.HK(友邦), 3690.HK(美团), 1810.HK(小米), 9618.HK(京东), 9988.HK(百度), 9999.HK(网易), 0388.HK(港交所) 等\n- A股沪市：600519.SS(茅台), 601318.SS(中国平安), 600036.SS(招商银行), 600900.SS(长江电力), 600887.SS(伊利) 等\n- A股深市：000001.SZ(平安银行), 000333.SZ(美的), 000858.SZ(五粮液), 002415.SZ(海康), 300750.SZ(宁德时代), 002594.SZ(比亚迪) 等\n- 全球指数：^GSPC(标普500), ^DJI(道琼斯), ^IXIC(纳斯达克), ^HSI(恒生), ^N225(日经), ^FTSE(富时100), 000001.SS(上证) 等\n- 板块ETF：XLK(科技), XLF(金融), XLV(医疗), XLE(能源), XLI(工业), SMH(半导体), IBB(生物科技)\n\n批量查询用逗号分隔：AAPL,TSLA,NVDA,^GSPC,^HSI",
+    "title": "全球金融数据(加密币+股票+指数+交易)",
+    "description": "【加密货币+全球股票+交易】查询加密货币、美股、港股、A股、指数、板块。同时支持OKX交易所下单交易。支持所有OKX交易对和Yahoo Finance全球股票数据。",
     "version": "2.0.0"
   },
   "servers": [
@@ -13,9 +13,9 @@
   "paths": {
     "/api/finance": {
       "post": {
-        "operationId": "callFinanceToolPost",
-        "summary": "金融市场数据查询 + 交易执行（POST，推荐方式）。支持加密货币、全球股票、下单交易",
-        "description": "通过 tool 参数指定查询类型，params 传入参数。\n\n📊 加密货币查询：\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"BTC-USDT\"}}\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"OKB-USDT\"}}\n{\"tool\":\"get_candles\",\"params\":{\"instId\":\"ETH-USDT\",\"bar\":\"1D\",\"limit\":30}}\n\n🏢 全球股票查询：\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"AAPL\"}}\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"0700.HK\"}} （港股加.HK）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"600519.SS\"}} （A股沪市加.SS）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"^GSPC\"}} （指数加^前缀）\n\n⚡ 交易功能：\n{\"tool\":\"trade_get_balance\",\"params\":{}} （查询账户余额）\n{\"tool\":\"trade_get_positions\",\"params\":{}} （查询持仓）\n{\"tool\":\"trade_place_limit_order\",\"params\":{\"instId\":\"OKB-USDT\",\"side\":\"buy\",\"px\":\"30\",\"sz\":\"1\"}} （买入限价单，首次返回预览）\n{\"tool\":\"trade_place_limit_order\",\"params\":{\"instId\":\"OKB-USDT\",\"side\":\"buy\",\"px\":\"30\",\"sz\":\"1\",\"confirmed\":true}} （确认后执行下单）\n{\"tool\":\"trade_cancel_order\",\"params\":{\"instId\":\"OKB-USDT\",\"ordId\":\"12345\"}} （撤销订单）\n\n综合查询：\n{\"tool\":\"get_major_indices\",\"params\":{}} （全球主要指数）\n{\"tool\":\"get_sector_performance\",\"params\":{}} （美股板块表现）\n{\"tool\":\"get_hot_cryptos\",\"params\":{}} （主流加密货币概览）\n{\"tool\":\"search_securities\",\"params\":{\"keyword\":\"腾讯\"}} （搜索金融产品）",
+        "operationId": "callFinanceTool",
+        "summary": "统一金融工具调用（下单/撤销订单/查订单/综合查询等复杂操作）",
+        "description": "通过 tool 参数指定操作类型。\n下单示例：{\"tool\":\"trade_place_limit_order\",\"params\":{\"instId\":\"OKB-USDT\",\"side\":\"buy\",\"px\":\"30\",\"sz\":\"1\"}}\n查余额：{\"tool\":\"trade_get_balance\",\"params\":{}}\n查持仓：{\"tool\":\"trade_get_positions\",\"params\":{}}\n撤销订单：{\"tool\":\"trade_cancel_order\",\"params\":{\"instId\":\"OKB-USDT\",\"ordId\":\"123\"}}\n综合行情：{\"tool\":\"get_market_overview\",\"params\":{\"instId\":\"BTC-USDT\"}}",
         "requestBody": {
           "required": true,
           "content": {
@@ -26,35 +26,25 @@
                 "properties": {
                   "tool": {
                     "type": "string",
-                    "description": "工具名称。加密货币：get_ticker(实时行情)/get_candles(K线)/get_orderbook(深度)/get_funding_rate(资金费率)/get_market_overview(综合)/get_hot_cryptos(主流币概览)。股票/指数：get_stock_quote(实时报价)/get_stock_chart(历史走势)/search_securities(搜索)/get_major_indices(全球指数)/get_sector_performance(板块表现)",
+                    "description": "操作类型：trade_place_limit_order(下单), trade_get_balance(余额), trade_get_positions(持仓), trade_cancel_order(撤单), trade_get_order(查单), get_market_overview(综览), get_candles(K线), get_orderbook(深度)",
                     "enum": [
-                      "get_ticker", "get_candles", "get_orderbook", "get_funding_rate", "get_market_overview", "get_hot_cryptos",
-                      "get_stock_quote", "get_stock_chart", "search_securities", "get_major_indices", "get_sector_performance",
-                      "trade_place_limit_order", "trade_cancel_order", "trade_get_order", "trade_get_balance", "trade_get_positions"
+                      "trade_place_limit_order", "trade_get_balance", "trade_get_positions",
+                      "trade_cancel_order", "trade_get_order",
+                      "get_market_overview", "get_candles", "get_orderbook"
                     ]
                   },
                   "params": {
                     "type": "object",
-                    "description": "查询参数",
                     "properties": {
-                      "instId": {
-                        "type": "string",
-                        "description": "加密货币交易对，如 BTC-USDT, ETH-USDT, OKB-USDT, SOL-USDT, DOGE-USDT, XRP-USDT, ADA-USDT, AVAX-USDT, DOT-USDT, LINK-USDT, MATIC-USDT, UNI-USDT, TRX-USDT, APT-USDT, SUI-USDT, ARB-USDT, OP-USDT, PEPE-USDT, WIF-USDT, BONK-USDT, INJ-USDT, TIA-USDT, SEI-USDT, NEAR-USDT, FTM-USDT"
-                      },
-                      "symbol": {
-                        "type": "string",
-                        "description": "全球股票/指数代码。美股直接输入如 AAPL,TSLA,NVDA,MSFT,GOOG,AMZN,META,JPM,V,MA,JNJ,WMT,PG,DIS,NFLX,ADBE,CRM,INTC,AMD,BAC,KO,NKE,BA,ORCL,ABNB,UBER,COIN,MSTR,PLTR,HOOD,PYPL,SQ,SHOP。港股加.HK如0700.HK(腾讯),9988.HK(阿里),0005.HK(汇丰),1299.HK(友邦),3690.HK(美团),1810.HK(小米),9618.HK(京东),0388.HK(港交所)。A股沪市加.SS如600519.SS(茅台),601318.SS(中国平安),600036.SS(招商银行)。A股深市加.SZ如000001.SZ,000333.SZ,300750.SZ,002594.SZ。指数加^如^GSPC(标普500),^DJI(道琼斯),^IXIC(纳斯达克),^HSI(恒生),^N225(日经),^FTSE(富时100),000001.SS(上证)。可批量：AAPL,TSLA,NVDA,^GSPC,^HSI"
-                      },
-                      "bar": { "type": "string", "description": "K线周期：1m/3m/5m/15m/30m/1H/2H/4H/6H/12H/1D/1W/1M" },
-                      "limit": { "type": "integer", "description": "返回数量" },
-                      "range": { "type": "string", "description": "历史范围：1d/5d/1mo/3mo/6mo/1y/5y/max" },
-                      "interval": { "type": "string", "description": "数据间隔：1m/5m/15m/30m/1h/1d/1wk/1mo" },
-                      "keyword": { "type": "string", "description": "搜索关键词，如"Tesla""腾讯""茅台""Bitcoin ETF"" },
-                      "side": { "type": "string", "description": "交易方向：buy(买入) 或 sell(卖出)（仅下单工具需要）" },
-                      "px": { "type": "string", "description": "限价单价格（仅下单工具需要）" },
-                      "sz": { "type": "string", "description": "交易数量（仅下单工具需要）" },
-                      "ordId": { "type": "string", "description": "订单ID（仅查询/撤销订单需要）" },
-                      "confirmed": { "type": "boolean", "description": "确认下单：true 确认执行，false/null 返回预览" }
+                      "instId": { "type": "string", "description": "交易对如 BTC-USDT/OKB-USDT/SOL-USDT/ETH-USDT" },
+                      "side": { "type": "string", "description": "buy买入/sell卖出" },
+                      "px": { "type": "string", "description": "限价单价格" },
+                      "sz": { "type": "string", "description": "数量" },
+                      "ordId": { "type": "string", "description": "订单ID" },
+                      "confirmed": { "type": "boolean", "description": "确认下单" },
+                      "bar": { "type": "string", "description": "K线周期" },
+                      "limit": { "type": "integer", "description": "数量" },
+                      "size": { "type": "integer", "description": "深度档位" }
                     }
                   }
                 }
@@ -62,27 +52,108 @@
             }
           }
         },
-        "responses": {
-          "200": { "description": "成功返回数据" },
-          "400": { "description": "参数错误" },
-          "500": { "description": "服务器错误" }
-        }
-      },
+        "responses": { "200": { "description": "成功" } }
+      }
+    },
+    "/api/finance/stock": {
       "get": {
-        "operationId": "callFinanceToolGet",
-        "summary": "金融市场数据查询（GET，简单查询用）。通过查询参数传参",
-        "description": "通过查询参数快速查询。示例：\n/api/finance?tool=get_ticker&instId=BTC-USDT\n/api/finance?tool=get_stock_quote&symbol=AAPL\n/api/finance?tool=get_major_indices\n/api/finance?tool=get_sector_performance\n/api/finance?tool=get_hot_cryptos\n/api/finance?tool=search_securities&keyword=腾讯",
+        "operationId": "getStockQuote",
+        "summary": "查询全球股票实时股价（美股/港股/A股/指数/ETF）",
+        "description": "支持全球股票实时报价。美股直接输代码如AAPL,TSLA,NVDA,MSFT,GOOG,AMZN,META,JPM,V,MA,JNJ,WMT,PG,DIS,NFLX,ADBE,CRM,INTC,AMD,BAC,KO,NKE,BA,ORCL,ABNB,UBER,COIN,MSTR,PLTR,HOOD,PYPL,SQ,SHOP。港股加.HK如0700.HK(腾讯),9988.HK(阿里),0005.HK(汇丰),1299.HK(友邦),3690.HK(美团),1810.HK(小米),9618.HK(京东),0388.HK(港交所)。A股沪市.SS如600519.SS(茅台),601318.SS(平安),600036.SS(招行)。深市.SZ如000001.SZ,000333.SZ,300750.SZ,002594.SZ。指数加^如^GSPC(标普500),^DJI(道琼斯),^IXIC(纳斯达克),^HSI(恒生),^N225(日经),^FTSE(富时100)。板块ETF:XLK(科技),XLF(金融),XLV(医疗),XLE(能源),SMH(半导体)。可批量逗号分隔",
         "parameters": [
-          { "name": "tool", "in": "query", "required": true, "schema": { "type": "string" }, "description": "工具名称" },
-          { "name": "instId", "in": "query", "schema": { "type": "string" }, "description": "加密货币交易对" },
-          { "name": "symbol", "in": "query", "schema": { "type": "string" }, "description": "股票代码" },
-          { "name": "keyword", "in": "query", "schema": { "type": "string" }, "description": "搜索关键词" },
-          { "name": "bar", "in": "query", "schema": { "type": "string" }, "description": "K线周期" },
-          { "name": "range", "in": "query", "schema": { "type": "string" }, "description": "历史范围" }
+          { "name": "symbol", "in": "query", "required": true, "schema": { "type": "string" }, "description": "股票代码，如 AAPL / TSLA / 0700.HK / 600519.SS / ^GSPC" }
         ],
-        "responses": {
-          "200": { "description": "成功返回数据" }
-        }
+        "responses": { "200": { "description": "返回股价数据" } }
+      }
+    },
+    "/api/finance/chart": {
+      "get": {
+        "operationId": "getStockChart",
+        "summary": "获取股票历史走势图(OHLCV数据)",
+        "description": "获取股票/ETF的历史价格走势数据，含开盘价、最高价、最低价、收盘价、成交量",
+        "parameters": [
+          { "name": "symbol", "in": "query", "required": true, "schema": { "type": "string" }, "description": "股票代码" },
+          { "name": "range", "in": "query", "schema": { "type": "string", "default": "1mo" }, "description": "范围:1d/5d/1mo/3mo/6mo/1y/5y/max" },
+          { "name": "interval", "in": "query", "schema": { "type": "string" }, "description": "间隔:1m/5m/15m/1h/1d/1wk/1mo" }
+        ],
+        "responses": { "200": { "description": "返回走势数据" } }
+      }
+    },
+    "/api/finance/search": {
+      "get": {
+        "operationId": "searchStocks",
+        "summary": "搜索股票/ETF/基金等金融产品",
+        "description": "按关键词搜索全球金融产品，返回匹配的代码和名称",
+        "parameters": [
+          { "name": "keyword", "in": "query", "required": true, "schema": { "type": "string" }, "description": "搜索关键词如 Apple/腾讯/茅台/Bitcoin ETF" }
+        ],
+        "responses": { "200": { "description": "返回搜索结果" } }
+      }
+    },
+    "/api/finance/indices": {
+      "get": {
+        "operationId": "getMajorIndices",
+        "summary": "查询全球主要股票指数（标普500/道琼斯/纳斯达克/恒生/日经/上证等）",
+        "description": "获取全球16个主要指数的实时行情",
+        "parameters": [],
+        "responses": { "200": { "description": "返回指数行情" } }
+      }
+    },
+    "/api/finance/sectors": {
+      "get": {
+        "operationId": "getSectorPerformance",
+        "summary": "查询美股板块表现（科技/金融/医疗/能源/半导体/黄金等）",
+        "description": "获取美股主要板块ETF的实时表现",
+        "parameters": [],
+        "responses": { "200": { "description": "返回板块数据" } }
+      }
+    },
+    "/api/finance/ticker": {
+      "get": {
+        "operationId": "getCryptoTicker",
+        "summary": "查询加密货币实时行情（所有OKX交易对）",
+        "description": "获取加密货币实时价格、24h涨跌、高低价、成交量。如BTC-USDT, ETH-USDT, OKB-USDT, SOL-USDT, DOGE-USDT, XRP-USDT, SAND-USDT",
+        "parameters": [
+          { "name": "instId", "in": "query", "required": true, "schema": { "type": "string" }, "description": "交易对如 BTC-USDT/ETH-USDT/OKB-USDT/SOL-USDT/SAND-USDT" }
+        ],
+        "responses": { "200": { "description": "返回行情数据" } }
+      }
+    },
+    "/api/finance/hot": {
+      "get": {
+        "operationId": "getHotCryptos",
+        "summary": "查询主流加密货币概览（前20种主流币）",
+        "description": "获取BTC,ETH,SOL,XRP,DOGE,ADA,AVAX,DOT,LINK,MATIC,UNI,OKB,TRX,APT,SUI,ARB,OP,PEPE,INJ等主流币行情",
+        "parameters": [],
+        "responses": { "200": { "description": "返回主流币行情" } }
+      }
+    },
+    "/api/finance/funding": {
+      "get": {
+        "operationId": "getFundingRate",
+        "summary": "查询合约资金费率",
+        "parameters": [
+          { "name": "instId", "in": "query", "required": true, "schema": { "type": "string" }, "description": "合约交易对如 BTC-USDT-SWAP" }
+        ],
+        "responses": { "200": { "description": "返回资金费率" } }
+      }
+    },
+    "/api/finance/balance": {
+      "get": {
+        "operationId": "getAccountBalance",
+        "summary": "查询OKX交易账户余额和资产",
+        "description": "获取OKX交易所账户的总资产和各币种余额",
+        "parameters": [],
+        "responses": { "200": { "description": "返回账户余额" } }
+      }
+    },
+    "/api/finance/positions": {
+      "get": {
+        "operationId": "getAccountPositions",
+        "summary": "查询OKX交易账户持仓",
+        "description": "获取OKX交易所的当前持仓情况",
+        "parameters": [],
+        "responses": { "200": { "description": "返回持仓数据" } }
       }
     }
   }
