@@ -14,8 +14,8 @@
     "/api/finance": {
       "post": {
         "operationId": "callFinanceToolPost",
-        "summary": "金融市场数据查询（POST，推荐方式）。支持加密货币和全球股票/指数",
-        "description": "通过 tool 参数指定查询类型，params 传入参数。这是最完整的查询方式。\n\n加密货币查询：\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"BTC-USDT\"}}\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"OKB-USDT\"}}\n{\"tool\":\"get_candles\",\"params\":{\"instId\":\"ETH-USDT\",\"bar\":\"1D\",\"limit\":30}}\n\n全球股票查询：\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"AAPL\"}}\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"0700.HK\"}} （港股加.HK）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"600519.SS\"}} （A股沪市加.SS）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"^GSPC\"}} （指数加^前缀）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"AAPL,MSFT,NVDA\"}} （批量查询）\n\n综合查询：\n{\"tool\":\"get_major_indices\",\"params\":{}} （全球主要指数）\n{\"tool\":\"get_sector_performance\",\"params\":{}} （美股板块表现）\n{\"tool\":\"get_hot_cryptos\",\"params\":{}} （主流加密货币概览）\n{\"tool\":\"search_securities\",\"params\":{\"keyword\":\"腾讯\"}} （搜索金融产品）",
+        "summary": "金融市场数据查询 + 交易执行（POST，推荐方式）。支持加密货币、全球股票、下单交易",
+        "description": "通过 tool 参数指定查询类型，params 传入参数。\n\n📊 加密货币查询：\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"BTC-USDT\"}}\n{\"tool\":\"get_ticker\",\"params\":{\"instId\":\"OKB-USDT\"}}\n{\"tool\":\"get_candles\",\"params\":{\"instId\":\"ETH-USDT\",\"bar\":\"1D\",\"limit\":30}}\n\n🏢 全球股票查询：\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"AAPL\"}}\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"0700.HK\"}} （港股加.HK）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"600519.SS\"}} （A股沪市加.SS）\n{\"tool\":\"get_stock_quote\",\"params\":{\"symbol\":\"^GSPC\"}} （指数加^前缀）\n\n⚡ 交易功能：\n{\"tool\":\"trade_get_balance\",\"params\":{}} （查询账户余额）\n{\"tool\":\"trade_get_positions\",\"params\":{}} （查询持仓）\n{\"tool\":\"trade_place_limit_order\",\"params\":{\"instId\":\"OKB-USDT\",\"side\":\"buy\",\"px\":\"30\",\"sz\":\"1\"}} （买入限价单，首次返回预览）\n{\"tool\":\"trade_place_limit_order\",\"params\":{\"instId\":\"OKB-USDT\",\"side\":\"buy\",\"px\":\"30\",\"sz\":\"1\",\"confirmed\":true}} （确认后执行下单）\n{\"tool\":\"trade_cancel_order\",\"params\":{\"instId\":\"OKB-USDT\",\"ordId\":\"12345\"}} （撤销订单）\n\n综合查询：\n{\"tool\":\"get_major_indices\",\"params\":{}} （全球主要指数）\n{\"tool\":\"get_sector_performance\",\"params\":{}} （美股板块表现）\n{\"tool\":\"get_hot_cryptos\",\"params\":{}} （主流加密货币概览）\n{\"tool\":\"search_securities\",\"params\":{\"keyword\":\"腾讯\"}} （搜索金融产品）",
         "requestBody": {
           "required": true,
           "content": {
@@ -29,7 +29,8 @@
                     "description": "工具名称。加密货币：get_ticker(实时行情)/get_candles(K线)/get_orderbook(深度)/get_funding_rate(资金费率)/get_market_overview(综合)/get_hot_cryptos(主流币概览)。股票/指数：get_stock_quote(实时报价)/get_stock_chart(历史走势)/search_securities(搜索)/get_major_indices(全球指数)/get_sector_performance(板块表现)",
                     "enum": [
                       "get_ticker", "get_candles", "get_orderbook", "get_funding_rate", "get_market_overview", "get_hot_cryptos",
-                      "get_stock_quote", "get_stock_chart", "search_securities", "get_major_indices", "get_sector_performance"
+                      "get_stock_quote", "get_stock_chart", "search_securities", "get_major_indices", "get_sector_performance",
+                      "trade_place_limit_order", "trade_cancel_order", "trade_get_order", "trade_get_balance", "trade_get_positions"
                     ]
                   },
                   "params": {
@@ -48,7 +49,12 @@
                       "limit": { "type": "integer", "description": "返回数量" },
                       "range": { "type": "string", "description": "历史范围：1d/5d/1mo/3mo/6mo/1y/5y/max" },
                       "interval": { "type": "string", "description": "数据间隔：1m/5m/15m/30m/1h/1d/1wk/1mo" },
-                      "keyword": { "type": "string", "description": "搜索关键词，如"Tesla""腾讯""茅台""Bitcoin ETF"" }
+                      "keyword": { "type": "string", "description": "搜索关键词，如"Tesla""腾讯""茅台""Bitcoin ETF"" },
+                      "side": { "type": "string", "description": "交易方向：buy(买入) 或 sell(卖出)（仅下单工具需要）" },
+                      "px": { "type": "string", "description": "限价单价格（仅下单工具需要）" },
+                      "sz": { "type": "string", "description": "交易数量（仅下单工具需要）" },
+                      "ordId": { "type": "string", "description": "订单ID（仅查询/撤销订单需要）" },
+                      "confirmed": { "type": "boolean", "description": "确认下单：true 确认执行，false/null 返回预览" }
                     }
                   }
                 }
