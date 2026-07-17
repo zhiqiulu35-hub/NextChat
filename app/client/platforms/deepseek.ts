@@ -138,8 +138,8 @@ export class DeepSeekApi implements LLMApi {
 
       if (shouldStream) {
         // ===== OKX 加密货币数据工具 =====
-        const OKX_WORKER_URL = "https://white-pine-a4b9.zhiqiulu35.workers.dev";
-        const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
+        const OKX_WORKER_URL = "/api/finance";
+        // const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
 
         const okxTools = [
           {
@@ -215,7 +215,7 @@ export class DeepSeekApi implements LLMApi {
               },
             },
           },
-        
+        ,
       // ===== 全球股票/指数查询工具 =====
       {
         type: "function" as const,
@@ -240,8 +240,8 @@ export class DeepSeekApi implements LLMApi {
             type: "object",
             properties: {
               symbol: { type: "string", description: "股票代码如AAPL" },
-              range: { type: "string", description: "时间范围:1d/5d/1mo/3mo/6mo/1y/5y/max" },
-              interval: { type: "string", description: "数据间隔:1m/5m/1h/1d/1wk/1mo" },
+              range: { type: "string", description: "范围:1d/5d/1mo/3mo/6mo/1y/5y/max" },
+              interval: { type: "string", description: "间隔:1m/5m/1h/1d/1wk/1mo" },
             },
             required: ["symbol"],
           },
@@ -251,7 +251,7 @@ export class DeepSeekApi implements LLMApi {
         type: "function" as const,
         function: {
           name: "search_stocks",
-          description: "搜索股票/ETF/基金等金融产品，根据关键词找到代码",
+          description: "搜索股票/ETF/基金等金融产品",
           parameters: {
             type: "object",
             properties: {
@@ -266,7 +266,7 @@ export class DeepSeekApi implements LLMApi {
         type: "function" as const,
         function: {
           name: "get_major_indices",
-          description: "查询全球主要股票指数：标普500(^GSPC)、道琼斯(^DJI)、纳斯达克(^IXIC)、恒生(^HSI)、日经(^N225)、上证(000001.SS)、富时100(^FTSE)等16个指数",
+          description: "查询全球主要股票指数：标普500(^GSPC)、道琼斯(^DJI)、纳斯达克(^IXIC)、恒生(^HSI)、日经(^N225)、上证(000001.SS)、富时100(^FTSE)",
           parameters: { type: "object", properties: {} },
         },
       },
@@ -277,8 +277,7 @@ export class DeepSeekApi implements LLMApi {
           description: "查询美股板块表现：科技(XLK)、金融(XLF)、医疗(XLV)、能源(XLE)、半导体(SMH)",
           parameters: { type: "object", properties: {} },
         },
-      },
-
+      }
       ];
 
         // ===== 交易工具（独立 Worker） =====
@@ -358,7 +357,7 @@ export class DeepSeekApi implements LLMApi {
         const tradeFuncs = {
           trade_place_limit_order: async (args: any) => {
             try {
-              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+              const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ tool: "trade_place_limit_order", params: args }),
@@ -411,16 +410,54 @@ export class DeepSeekApi implements LLMApi {
         const okxFuncs = {
           get_ticker: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "/api/ticker?instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_ticker&instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
+            } catch (e) { return { error: String(e)
+          // ===== 股票/指数查询函数实现 =====
+          get_stock_quote: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_quote&symbol=" + encodeURIComponent(args.symbol));
+              const data = await res.json();
+              return data?.data || data;
             } catch (e) { return { error: String(e) }; }
+          },
+          get_stock_chart: async (args: any) => {
+            try {
+              const range = args.range || "1mo";
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_chart&symbol=" + encodeURIComponent(args.symbol) + "&range=" + range);
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          search_stocks: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=search_securities&keyword=" + encodeURIComponent(args.keyword));
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          get_major_indices: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_major_indices");
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+          get_sector_performance: async (args: any) => {
+            try {
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_sector_performance");
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) { return { error: String(e) }; }
+          },
+ }; }
           },
           get_candles: async (args: any) => {
             try {
               const bar = args.bar || "1H";
               const limit = args.limit || 20;
-              const res = await fetch(OKX_WORKER_URL + "/api/candles?instId=" + encodeURIComponent(args.instId) + "&bar=" + bar + "&limit=" + limit);
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_candles&instId=" + encodeURIComponent(args.instId) + "&bar=" + bar + "&limit=" + limit);
               const data = await res.json();
               return data;
             } catch (e) { return { error: String(e) }; }
@@ -428,21 +465,21 @@ export class DeepSeekApi implements LLMApi {
           get_orderbook: async (args: any) => {
             try {
               const size = args.size || 20;
-              const res = await fetch(OKX_WORKER_URL + "/api/orderbook?instId=" + encodeURIComponent(args.instId) + "&size=" + size);
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_orderbook&instId=" + encodeURIComponent(args.instId) + "&size=" + size);
               const data = await res.json();
               return data;
             } catch (e) { return { error: String(e) }; }
           },
           get_funding_rate: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "/api/funding?instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_funding_rate&instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
             } catch (e) { return { error: String(e) }; }
           },
           get_market_overview: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "/api/overview?instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(OKX_WORKER_URL + "?tool=get_market_overview&instId=" + encodeURIComponent(args.instId));
               const data = await res.json();
               return data;
             } catch (e) { return { error: String(e) }; }
