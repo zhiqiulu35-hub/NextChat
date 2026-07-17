@@ -1,21 +1,34 @@
 /**
- * 全球金融数据代理 API
- * ======================
+ * 全球金融数据 + 交易 代理 API
+ * ==============================
  * 内置在 NextChat 中，无需外部 Worker
- * 数据源：OKX (加密货币) + Yahoo Finance (全球股票/指数)
+ * 数据源：OKX (加密货币行情+交易) + Yahoo Finance (全球股票/指数)
  *
- * 使用方式：
- *   POST /api/finance   → { tool: "get_ticker", params: { instId: "BTC-USDT" } }
- *   GET  /api/finance?tool=get_stock_quote&symbol=AAPL
- *   GET  /api/finance/stock?symbol=AAPL
+ * 查询：
+ *   POST /api/finance  → { tool: "get_ticker", params: { instId: "BTC-USDT" } }
+ *
+ * 交易：
+ *   POST /api/finance  → { tool: "trade_place_limit_order", params: { instId: "OKB-USDT", side: "buy", px: "30", sz: "1" } }
+ *   POST /api/finance  → { tool: "trade_get_balance", params: {} }
+ *   POST /api/finance  → { tool: "trade_get_positions", params: {} }
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
+// ========== API 配置 ==========
 
 const OKX_BASE = "https://www.okx.com/api/v5";
 const YAHOO_Q = "https://query1.finance.yahoo.com/v7/finance/quote";
 const YAHOO_C = "https://query1.finance.yahoo.com/v8/finance/chart";
 const YAHOO_S = "https://query1.finance.yahoo.com/v1/finance/search";
+
+// OKX 交易 API 凭证
+const OKX_API_KEY = "55961818-b9df-4ef1-8383-18b34c88b98e";
+const OKX_SECRET_KEY = "CAB5E5297054645FFCAF65E9A62D40C6";
+const OKX_PASSPHRASE = "Qq2248077246...";
+const MAX_ORDER_USDT = 100; // 单笔最大 100 USDT（风控）
+
+// ========== 数据列表 ==========
 
 const HOT = [
   "BTC-USDT","ETH-USDT","SOL-USDT","XRP-USDT","DOGE-USDT",
@@ -41,6 +54,8 @@ const SECTORS = [
 
 const CORS = { "Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type" };
 
+// ========== 路由处理 ==========
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: CORS });
 }
@@ -61,59 +76,56 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const pathParts = url.pathname.replace("/api/finance", "").split("/").filter(Boolean);
     const params: Record<string,any> = {};
     url.searchParams.forEach((v,k) => { params[k] = isNaN(Number(v)) ? v : Number(v); });
-    const toolFromPath = pathParts[0] || params.tool;
-
-    if (!toolFromPath) {
+    const tool = params.tool;
+    if (!tool) {
       return NextResponse.json({
         help: true,
         usage: {
           crypto: "GET /api/finance?tool=get_ticker&instId=BTC-USDT",
           stock: "GET /api/finance?tool=get_stock_quote&symbol=AAPL",
-          indices: "GET /api/finance?tool=get_major_indices",
-          sectors: "GET /api/finance?tool=get_sector_performance",
-          search: "GET /api/finance?tool=search_securities&keyword=腾讯",
+          trade: "POST /api/finance with JSON body { tool, params }",
+          balance: "POST /api/finance { tool:'trade_get_balance', params:{} }",
         }
       }, { headers: CORS });
     }
-
-    const data = await exec(toolFromPath, params);
+    const data = await exec(tool, params);
     return NextResponse.json({ success: true, data }, { headers: CORS });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500, headers: CORS });
   }
 }
 
+// ========== 工具执行器 ==========
+
 async function exec(tool: string, p: Record<string,any>) {
   switch (tool) {
+
+    // ---- 加密货币行情 ----
     case "get_ticker": case "ticker": {
       req(p,["instId"]);
-      return fmtTicker(await okx(`/market/ticker?instId=${e(p.instId)}`));
+      return fmtTicker(await okxPub(`/market/ticker?instId=${e(p.instId)}`));
     }
     case "get_candles": case "candles": {
       req(p,["instId"]);
-      const bar = p.bar || "1H";
-      const lim = Math.min(p.limit||20,300);
-      return fmtCandles(await okx(`/market/candles?instId=${e(p.instId)}&bar=${bar}&limit=${lim}`), p.instId, bar);
+      return fmtCandles(await okxPub(`/market/candles?instId=${e(p.instId)}&bar=${p.bar||"1H"}&limit=${Math.min(p.limit||20,300)}`), p.instId, p.bar||"1H");
     }
     case "get_orderbook": case "orderbook": {
       req(p,["instId"]);
-      const sz = Math.min(p.size||20,400);
-      return fmtBook(await okx(`/market/books?instId=${e(p.instId)}&sz=${sz}`));
+      return fmtBook(await okxPub(`/market/books?instId=${e(p.instId)}&sz=${Math.min(p.size||20,400)}`));
     }
     case "get_funding_rate": case "funding": {
       req(p,["instId"]);
-      return fmtFunding(await okx(`/public/funding-rate?instId=${e(p.instId)}`));
+      return fmtFunding(await okxPub(`/public/funding-rate?instId=${e(p.instId)}`));
     }
     case "get_market_overview": case "overview": {
       req(p,["instId"]);
       const id = p.instId;
       const [tk,cl,ob] = await Promise.all([
-        okx(`/market/ticker?instId=${e(id)}`).catch(()=>null),
-        okx(`/market/candles?instId=${e(id)}&bar=1D&limit=7`).catch(()=>null),
-        okx(`/market/books?instId=${e(id)}&sz=10`).catch(()=>null),
+        okxPub(`/market/ticker?instId=${e(id)}`).catch(()=>null),
+        okxPub(`/market/candles?instId=${e(id)}&bar=1D&limit=7`).catch(()=>null),
+        okxPub(`/market/books?instId=${e(id)}&sz=10`).catch(()=>null),
       ]);
       return { summary: fmtTicker(tk), trend: cl?fmtCandles(cl,id,"1D"):null, depth: ob?fmtBook(ob):null };
     }
@@ -121,11 +133,13 @@ async function exec(tool: string, p: Record<string,any>) {
       const r = [];
       for (let i=0;i<HOT.length;i+=5) {
         const batch = HOT.slice(i,i+5);
-        const br = await Promise.all(batch.map(s=>okx(`/market/ticker?instId=${e(s)}`).then(fmtTicker).catch(()=>null)));
+        const br = await Promise.all(batch.map(s=>okxPub(`/market/ticker?instId=${e(s)}`).then(fmtTicker).catch(()=>null)));
         r.push(...br.filter(Boolean));
       }
       return { coins: r };
     }
+
+    // ---- 股票/指数 ----
     case "get_stock_quote": case "stock": case "quote": {
       req(p,["symbol"]);
       return await yq(p.symbol);
@@ -148,11 +162,34 @@ async function exec(tool: string, p: Record<string,any>) {
       const q = await yq(syms);
       return { sectors: SECTORS.map((x,i)=>({ name:x.n, symbol:x.s, quote:q.results?.[i]||null })) };
     }
+
+    // ---- 交易功能 ----
+    case "trade_place_limit_order": case "place_order": case "buy": case "sell": {
+      req(p,["instId","side","px","sz"]);
+      return await placeLimitOrder(p);
+    }
+    case "trade_cancel_order": case "cancel_order": {
+      req(p,["instId","ordId"]);
+      return await cancelOrder(p.instId, p.ordId);
+    }
+    case "trade_get_order": case "get_order": {
+      req(p,["instId","ordId"]);
+      return await getOrder(p.instId, p.ordId);
+    }
+    case "trade_get_balance": case "balance": case "get_balance": {
+      return await getBalance();
+    }
+    case "trade_get_positions": case "positions": case "get_positions": {
+      return await getPositions();
+    }
+
     default: throw new Error(`未知工具: ${tool}`);
   }
 }
 
-async function okx(path: string) {
+// ========== OKX 公开 API（无需签名） ==========
+
+async function okxPub(path: string) {
   const c = new AbortController();
   const t = setTimeout(()=>c.abort(),10000);
   try {
@@ -163,6 +200,149 @@ async function okx(path: string) {
     return b.data;
   } finally { clearTimeout(t); }
 }
+
+// ========== OKX 签名 API（交易等需要身份验证的操作） ==========
+
+async function okxSign(timestamp: string, method: string, requestPath: string, body: string): Promise<string> {
+  const message = timestamp + method + requestPath + body;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(OKX_SECRET_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
+}
+
+async function okxAuth(method: string, requestPath: string, body: string = "") {
+  const timestamp = new Date().toISOString().slice(0, -5) + "Z";
+  const signature = await okxSign(timestamp, method, requestPath, body);
+
+  const headers = {
+    "OK-ACCESS-KEY": OKX_API_KEY,
+    "OK-ACCESS-SIGN": signature,
+    "OK-ACCESS-TIMESTAMP": timestamp,
+    "OK-ACCESS-PASSPHRASE": OKX_PASSPHRASE,
+    "Content-Type": "application/json",
+  };
+
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(),10000);
+  try {
+    const r = await fetch(`${OKX_BASE}${requestPath}`, {
+      method, headers, body: body || undefined,
+      signal: c.signal,
+    });
+    const json = await r.json();
+    if (json.code !== "0") throw new Error(json.msg || JSON.stringify(json));
+    return json;
+  } finally { clearTimeout(t); }
+}
+
+// ========== 交易功能实现 ==========
+
+async function placeLimitOrder(p: Record<string,any>) {
+  const side = p.side.toLowerCase();
+  if (side !== "buy" && side !== "sell") throw new Error("side 必须是 buy 或 sell");
+
+  const orderValue = parseFloat(p.px) * parseFloat(p.sz);
+
+  // 风控检查
+  if (orderValue > MAX_ORDER_USDT) {
+    return {
+      warning: true,
+      message: `⚠️ 订单金额 $${orderValue.toFixed(2)} 超过单笔上限 $${MAX_ORDER_USDT}`,
+      max_order_usdt: MAX_ORDER_USDT,
+      order_value_usd: orderValue.toFixed(2),
+    };
+  }
+
+  // 未确认时返回预览
+  if (p.confirmed !== true && p.confirmed !== "true") {
+    return {
+      requires_confirmation: true,
+      preview: {
+        action: side === "buy" ? "买入" : "卖出",
+        instId: p.instId,
+        price: p.px,
+        amount: p.sz,
+        estimated_value_usd: `$${orderValue.toFixed(2)}`,
+        order_type: "限价单",
+      },
+      message: `请确认：${side === "buy" ? "买入" : "卖出"} ${p.sz} ${p.instId}，限价 $${p.px}，预估 $${orderValue.toFixed(2)}`,
+      hint: '确认请将 confirmed 设为 true，如: { ... params: { ..., confirmed: true } }',
+    };
+  }
+
+  // 执行下单
+  const body = JSON.stringify({
+    instId: p.instId.toUpperCase(),
+    tdMode: "cash",
+    side: side,
+    ordType: "limit",
+    px: String(p.px),
+    sz: String(p.sz),
+  });
+
+  const result = await okxAuth("POST", "/api/v5/trade/order", body);
+  const orderId = result.data?.[0]?.ordId;
+
+  return {
+    success: true,
+    orderId,
+    instId: p.instId,
+    side,
+    price: p.px,
+    amount: p.sz,
+    state: "已提交",
+    message: `✅ 已提交${side === "buy" ? "买入" : "卖出"}委托：${p.sz} ${p.instId}，限价 $${p.px}`,
+  };
+}
+
+async function cancelOrder(instId: string, ordId: string) {
+  const body = JSON.stringify({ instId: instId.toUpperCase(), ordId });
+  const result = await okxAuth("POST", "/api/v5/trade/cancel-order", body);
+  return { success: true, message: `✅ 已撤销订单 ${ordId}` };
+}
+
+async function getOrder(instId: string, ordId: string) {
+  const result = await okxAuth("GET", `/api/v5/trade/order?instId=${e(instId.toUpperCase())}&ordId=${e(ordId)}`);
+  return { order: result.data?.[0] || null };
+}
+
+async function getBalance() {
+  const result = await okxAuth("GET", "/api/v5/account/balance");
+  const details = (result.data?.[0]?.details || []).map((d:any) => ({
+    currency: d.ccy,
+    balance: d.bal,
+    frozen: d.frozen,
+    available: d.availBal,
+    usdt_value: d.eqUsd,
+  }));
+
+  return {
+    total_usdt: result.data?.[0]?.totalEq,
+    details,
+    summary: details.map((d:any) => `${d.currency}: ${d.balance} (≈ $${d.usdt_value || "0"})`).join(" | "),
+  };
+}
+
+async function getPositions() {
+  const result = await okxAuth("GET", "/api/v5/account/positions");
+  return {
+    positions: (result.data || []).map((p:any) => ({
+      instId: p.instId,
+      pos: p.pos,
+      avgPx: p.avgPx,
+      markPx: p.markPx,
+      upl: p.upl,
+      margin: p.margin,
+    })),
+  };
+}
+
+// ========== Yahoo Finance API ==========
 
 async function yq(s: string) {
   const r = await ft(`${YAHOO_Q}?symbols=${e(s)}`);
@@ -200,6 +380,8 @@ async function ft(url: string) {
     return await fetch(url, { signal:c.signal, headers:{"User-Agent":"Mozilla/5.0","Accept":"application/json"} });
   } finally { clearTimeout(t); }
 }
+
+// ========== 格式化 ==========
 
 function fmtTicker(d: any) {
   if (!d||!d[0]) return null;
@@ -244,6 +426,8 @@ function fyq(item: any) {
 function fmc(cap: number) {
   return cap>=1e12?`$${(cap/1e12).toFixed(2)}T`:cap>=1e9?`$${(cap/1e9).toFixed(2)}B`:`$${(cap/1e6).toFixed(2)}M`;
 }
+
+// ========== 工具函数 ==========
 
 function req(p: Record<string,any>, ks: string[]) {
   const missing = ks.filter(k=>!p[k]&&p[k]!==0);
