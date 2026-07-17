@@ -215,7 +215,7 @@ export class DeepSeekApi implements LLMApi {
               },
             },
           },
-        ,
+        
       // ===== 全球股票/指数查询工具 =====
       {
         type: "function" as const,
