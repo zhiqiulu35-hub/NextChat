@@ -15,8 +15,8 @@
     "schema": "https://ghp.ci/https://raw.githubusercontent.com/ChatGPTNextWeb/NextChat-Awesome-Plugins/main/plugins/duckduckgolite/openapi.json"
   },
   {
-    "id": "okx_crypto",
-    "name": "OKX Crypto",
+    "id": "global_finance",
+    "name": "全球金融数据(加密币+股票+交易)",
     "schema": "/openapi-okx.json"
   }
 ]
