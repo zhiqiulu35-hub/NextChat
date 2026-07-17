@@ -570,4 +570,65 @@ export class DeepSeekApi implements LLMApi {
   async models(): Promise<LLMModel[]> {
     return [];
   }
-}
+,
+          {
+            type: "function",
+            function: {
+              name: "get_stock_quote",
+              description: "查询全球股票/ETF/指数实时股价。美股:AAPL,NVDA,TSLA,MSFT。港股:0700.HK。A股:600519.SS。指数:^GSPC,^HSI,^N225",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", description: "股票代码。美股AAPL,港股0700.HK,A股600519.SS,指数^GSPC,可批量逗号分隔" },
+                },
+                required: ["symbol"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_stock_chart",
+              description: "获取股票历史价格走势数据",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", description: "股票代码" },
+                  range: { type: "string", description: "范围:1d/5d/1mo/3mo/6mo/1y" },
+                },
+                required: ["symbol"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "search_stocks",
+              description: "搜索股票/ETF/基金",
+              parameters: {
+                type: "object",
+                properties: {
+                  keyword: { type: "string", description: "关键词" },
+                },
+                required: ["keyword"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_major_indices",
+              description: "查询全球主要股票指数实时行情：标普500、道琼斯、纳斯达克、恒生指数、日经225、上证指数等",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_sector_performance",
+              description: "查询美股板块表现：科技、金融、医疗、能源、半导体",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        
+      }
