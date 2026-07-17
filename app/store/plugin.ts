@@ -241,10 +241,8 @@ export const usePluginStore = createPersistStore(
         .then((res) => {
           Promise.all(
             res.map((item: any) =>
-              // skip get schema
-              state.get(item.id)
-                ? item
-                : fetch(item.schema)
+              // 每次重新加载最新 schema（修复：之前缓存导致看不到新工具）
+              fetch(item.schema)
                     .then((res) => res.text())
                     .then((content) => ({
                       ...item,
