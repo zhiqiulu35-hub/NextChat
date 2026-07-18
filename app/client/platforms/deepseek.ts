@@ -137,10 +137,8 @@ export class DeepSeekApi implements LLMApi {
       );
 
       if (shouldStream) {
-        // ===== OKX 加密货币数据工具 =====
+        // ===== 金融数据 + 交易 API（内置在 NextChat 中） =====
         const OKX_WORKER_URL = "/api/finance";
-        const TRADE_WORKER_URL =
-          "https://raspy-tree-211e.zhiqiulu35.workers.dev";
 
         const okxTools = [
           {
@@ -470,7 +468,7 @@ export class DeepSeekApi implements LLMApi {
           },
           trade_cancel_order: async (args: any) => {
             try {
-              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+              const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -485,7 +483,7 @@ export class DeepSeekApi implements LLMApi {
           },
           trade_get_order: async (args: any) => {
             try {
-              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+              const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ tool: "trade_get_order", params: args }),
@@ -497,7 +495,7 @@ export class DeepSeekApi implements LLMApi {
           },
           trade_get_balance: async (args: any) => {
             try {
-              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+              const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ tool: "trade_get_balance", params: {} }),
@@ -509,7 +507,7 @@ export class DeepSeekApi implements LLMApi {
           },
           trade_get_positions: async (args: any) => {
             try {
-              const res = await fetch(TRADE_WORKER_URL + "/api/call", {
+              const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
