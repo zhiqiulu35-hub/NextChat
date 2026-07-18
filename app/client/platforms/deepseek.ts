@@ -139,18 +139,24 @@ export class DeepSeekApi implements LLMApi {
       if (shouldStream) {
         // ===== OKX 加密货币数据工具 =====
         const OKX_WORKER_URL = "/api/finance";
-        const TRADE_WORKER_URL = "https://raspy-tree-211e.zhiqiulu35.workers.dev";
+        const TRADE_WORKER_URL =
+          "https://raspy-tree-211e.zhiqiulu35.workers.dev";
 
         const okxTools = [
           {
             type: "function",
             function: {
               name: "get_ticker",
-              description: "获取加密货币实时行情：最新价、24h涨跌幅、最高价、最低价、成交量",
+              description:
+                "获取加密货币/TradFi实时行情：最新价、24h涨跌幅、最高价、最低价、成交量。TradFi如NVDAUSDT(英伟达), AAPLUSDT(苹果), TSLAUSDT(特斯拉)",
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT, ETH-USDT, SOL-USDT" },
+                  instId: {
+                    type: "string",
+                    description:
+                      "交易对，如BTC-USDT; 或TradFi股票代码如NVDAUSDT, AAPLUSDT, TSLAUSDT",
+                  },
                 },
                 required: ["instId"],
               },
@@ -164,9 +170,21 @@ export class DeepSeekApi implements LLMApi {
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
-                  bar: { type: "string", description: "K线周期：1m/5m/15m/1H/4H/1D/1W", default: "1H" },
-                  limit: { type: "integer", description: "返回K线数量", default: 20 },
+                  instId: {
+                    type: "string",
+                    description:
+                      "交易对。加密货币如BTC-USDT; TradFi股票如NVDAUSDT(英伟达), AAPLUSDT(苹果), TSLAUSDT(特斯拉)",
+                  },
+                  bar: {
+                    type: "string",
+                    description: "K线周期：1m/5m/15m/1H/4H/1D/1W",
+                    default: "1H",
+                  },
+                  limit: {
+                    type: "integer",
+                    description: "返回K线数量",
+                    default: 20,
+                  },
                 },
                 required: ["instId"],
               },
@@ -180,8 +198,15 @@ export class DeepSeekApi implements LLMApi {
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
-                  size: { type: "integer", description: "深度档位数量", default: 20 },
+                  instId: {
+                    type: "string",
+                    description: "交易对，如 BTC-USDT",
+                  },
+                  size: {
+                    type: "integer",
+                    description: "深度档位数量",
+                    default: 20,
+                  },
                 },
                 required: ["instId"],
               },
@@ -195,7 +220,10 @@ export class DeepSeekApi implements LLMApi {
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "合约交易对，如 BTC-USDT-SWAP" },
+                  instId: {
+                    type: "string",
+                    description: "合约交易对，如 BTC-USDT-SWAP",
+                  },
                 },
                 required: ["instId"],
               },
@@ -205,80 +233,97 @@ export class DeepSeekApi implements LLMApi {
             type: "function",
             function: {
               name: "get_market_overview",
-              description: "获取加密货币综合市场概况：同时查询行情、K线趋势、深度数据",
+              description:
+                "获取加密货币综合市场概况：同时查询行情、K线趋势、深度数据",
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  instId: {
+                    type: "string",
+                    description: "交易对，如 BTC-USDT",
+                  },
                 },
                 required: ["instId"],
               },
             },
           },
-        ,
-      // ===== 全球股票/指数查询工具 =====
-      {
-        type: "function" as const,
-        function: {
-          name: "get_stock_quote",
-          description: "查询全球股票/ETF/指数实时股价。美股直接输代码如AAPL,NVDA,TSLA。港股加.HK如0700.HK(腾讯)。A股沪市.SS如600519.SS(茅台)。指数加^如^GSPC(标普500),^HSI(恒生指数)。可批量查询用逗号分隔",
-          parameters: {
-            type: "object",
-            properties: {
-              symbol: { type: "string", description: "股票代码。美股AAPL/NVDA/TSLA。港股0700.HK。A股600519.SS。指数^GSPC。可批量逗号分隔" },
+          ,
+          // ===== 全球股票/指数查询工具 =====
+          {
+            type: "function" as const,
+            function: {
+              name: "get_stock_quote",
+              description:
+                "查询全球股票/ETF/指数实时股价。美股直接输代码如AAPL,NVDA,TSLA。港股加.HK如0700.HK(腾讯)。A股沪市.SS如600519.SS(茅台)。指数加^如^GSPC(标普500),^HSI(恒生指数)。可批量查询用逗号分隔",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: {
+                    type: "string",
+                    description:
+                      "股票代码。美股AAPL/NVDA/TSLA。港股0700.HK。A股600519.SS。指数^GSPC。可批量逗号分隔",
+                  },
+                },
+                required: ["symbol"],
+              },
             },
-            required: ["symbol"],
           },
-        },
-      },
-      {
-        type: "function" as const,
-        function: {
-          name: "get_stock_chart",
-          description: "获取股票历史价格走势数据(OHLCV)",
-          parameters: {
-            type: "object",
-            properties: {
-              symbol: { type: "string", description: "股票代码如AAPL" },
-              range: { type: "string", description: "范围:1d/5d/1mo/3mo/6mo/1y/5y/max" },
-              interval: { type: "string", description: "间隔:1m/5m/1h/1d/1wk/1mo" },
+          {
+            type: "function" as const,
+            function: {
+              name: "get_stock_chart",
+              description: "获取股票历史价格走势数据(OHLCV)",
+              parameters: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string", description: "股票代码如AAPL" },
+                  range: {
+                    type: "string",
+                    description: "范围:1d/5d/1mo/3mo/6mo/1y/5y/max",
+                  },
+                  interval: {
+                    type: "string",
+                    description: "间隔:1m/5m/1h/1d/1wk/1mo",
+                  },
+                },
+                required: ["symbol"],
+              },
             },
-            required: ["symbol"],
           },
-        },
-      },
-      {
-        type: "function" as const,
-        function: {
-          name: "search_stocks",
-          description: "搜索股票/ETF/基金等金融产品",
-          parameters: {
-            type: "object",
-            properties: {
-              keyword: { type: "string", description: "搜索关键词如Apple" },
-              limit: { type: "integer", description: "返回数量" },
+          {
+            type: "function" as const,
+            function: {
+              name: "search_securities",
+              description: "搜索股票/ETF/基金等金融产品",
+              parameters: {
+                type: "object",
+                properties: {
+                  keyword: { type: "string", description: "搜索关键词如Apple" },
+                  limit: { type: "integer", description: "返回数量" },
+                },
+                required: ["keyword"],
+              },
             },
-            required: ["keyword"],
           },
-        },
-      },
-      {
-        type: "function" as const,
-        function: {
-          name: "get_major_indices",
-          description: "查询全球主要股票指数：标普500(^GSPC)、道琼斯(^DJI)、纳斯达克(^IXIC)、恒生(^HSI)、日经(^N225)、上证(000001.SS)、富时100(^FTSE)",
-          parameters: { type: "object", properties: {} },
-        },
-      },
-      {
-        type: "function" as const,
-        function: {
-          name: "get_sector_performance",
-          description: "查询美股板块表现：科技(XLK)、金融(XLF)、医疗(XLV)、能源(XLE)、半导体(SMH)",
-          parameters: { type: "object", properties: {} },
-        },
-      }
-      ];
+          {
+            type: "function" as const,
+            function: {
+              name: "get_major_indices",
+              description:
+                "查询全球主要股票指数：标普500(^GSPC)、道琼斯(^DJI)、纳斯达克(^IXIC)、恒生(^HSI)、日经(^N225)、上证(000001.SS)、富时100(^FTSE)",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+          {
+            type: "function" as const,
+            function: {
+              name: "get_sector_performance",
+              description:
+                "查询美股板块表现：科技(XLK)、金融(XLF)、医疗(XLV)、能源(XLE)、半导体(SMH)",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ];
 
         // ===== 交易工具（独立 Worker） =====
         const tradeTools = [
@@ -286,15 +331,27 @@ export class DeepSeekApi implements LLMApi {
             type: "function",
             function: {
               name: "trade_place_limit_order",
-              description: "下限价单 - 买入或卖出加密货币。首次调用返回预览确认，确认后再调用一次（confirmed=true）即可执行下单。",
+              description:
+                "下限价单 - 买入或卖出。支持加密货币（如BTC-USDT）和TradFi股票永续合约（如NVDAUSDT）。首次调用返回预览确认，确认后再传confirmed=true执行下单。",
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
-                  side: { type: "string", description: "buy=买入 / sell=卖出", enum: ["buy", "sell"] },
+                  instId: {
+                    type: "string",
+                    description: "交易对，如 BTC-USDT 或 NVDAUSDT",
+                  },
+                  side: {
+                    type: "string",
+                    description: "buy=买入 / sell=卖出",
+                    enum: ["buy", "sell"],
+                  },
                   px: { type: "string", description: "限价（价格）" },
                   sz: { type: "string", description: "数量" },
-                  confirmed: { type: "boolean", description: "是否确认下单，首次调用不要传这个，确认后再传 true" },
+                  confirmed: {
+                    type: "boolean",
+                    description:
+                      "是否确认下单，首次调用不要传这个，确认后再传 true",
+                  },
                 },
                 required: ["instId", "side", "px", "sz"],
               },
@@ -308,7 +365,10 @@ export class DeepSeekApi implements LLMApi {
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  instId: {
+                    type: "string",
+                    description: "交易对，如 BTC-USDT",
+                  },
                   ordId: { type: "string", description: "订单ID" },
                 },
                 required: ["instId", "ordId"],
@@ -323,7 +383,10 @@ export class DeepSeekApi implements LLMApi {
               parameters: {
                 type: "object",
                 properties: {
-                  instId: { type: "string", description: "交易对，如 BTC-USDT" },
+                  instId: {
+                    type: "string",
+                    description: "交易对，如 BTC-USDT",
+                  },
                   ordId: { type: "string", description: "订单ID" },
                 },
                 required: ["instId", "ordId"],
@@ -354,26 +417,71 @@ export class DeepSeekApi implements LLMApi {
           },
         ];
 
+        // ===== TradFi 股票永续合约工具 =====
+        const tradfiTools = [
+          {
+            type: "function",
+            function: {
+              name: "get_tradfi_ticker",
+              description:
+                "查询OKX TradFi股票永续合约实时行情。支持NVDAUSDT(英伟达), AAPLUSDT(苹果), TSLAUSDT(特斯拉), MSFTUSDT(微软), GOOGLUSDT(谷歌), METAUSDT(Meta), AMZNUSDT(亚马逊), AVGOUSDT(博通), JPMUSDT(摩根大通), LLYUSDT(礼来), WMTUSDT(沃尔玛), COSTUSDT(好市多)等。简写代码如NVDA自动补全USDT后缀",
+              parameters: {
+                type: "object",
+                properties: {
+                  instId: {
+                    type: "string",
+                    description:
+                      "股票代码，如NVDA(自动补全), AAPL, TSLA, MSFT, GOOGL, META, AMZN，或完整NVDAUSDT",
+                  },
+                },
+                required: ["instId"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_tradfi_stocks",
+              description:
+                "获取OKX TradFi板块所有股票永续合约实时行情概览（英伟达、苹果、特斯拉、微软、谷歌、Meta、亚马逊等约30只）",
+              parameters: {
+                type: "object",
+                properties: {},
+              },
+            },
+          },
+        ];
+
         const tradeFuncs = {
           trade_place_limit_order: async (args: any) => {
             try {
               const res = await fetch(OKX_WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tool: "trade_place_limit_order", params: args }),
+                body: JSON.stringify({
+                  tool: "trade_place_limit_order",
+                  params: args,
+                }),
               });
               return res.json();
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           trade_cancel_order: async (args: any) => {
             try {
               const res = await fetch(TRADE_WORKER_URL + "/api/call", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tool: "trade_cancel_order", params: args }),
+                body: JSON.stringify({
+                  tool: "trade_cancel_order",
+                  params: args,
+                }),
               });
               return res.json();
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           trade_get_order: async (args: any) => {
             try {
@@ -383,7 +491,9 @@ export class DeepSeekApi implements LLMApi {
                 body: JSON.stringify({ tool: "trade_get_order", params: args }),
               });
               return res.json();
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           trade_get_balance: async (args: any) => {
             try {
@@ -393,101 +503,208 @@ export class DeepSeekApi implements LLMApi {
                 body: JSON.stringify({ tool: "trade_get_balance", params: {} }),
               });
               return res.json();
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           trade_get_positions: async (args: any) => {
             try {
               const res = await fetch(TRADE_WORKER_URL + "/api/call", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tool: "trade_get_positions", params: {} }),
+                body: JSON.stringify({
+                  tool: "trade_get_positions",
+                  params: {},
+                }),
               });
               return res.json();
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
+          },
+        };
+
+        // ===== TradFi 工具函数 =====
+        const tradfiFuncs = {
+          get_tradfi_ticker: async (args: any) => {
+            try {
+              const instId = (args.instId || "").toUpperCase();
+              const fullInstId = instId.endsWith("USDT")
+                ? instId
+                : instId + "USDT";
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_tradfi_ticker&instId=" +
+                  encodeURIComponent(fullInstId),
+              );
+              return await res.json();
+            } catch (e) {
+              return { error: String(e) };
+            }
+          },
+          get_tradfi_stocks: async () => {
+            try {
+              const res = await fetch(
+                OKX_WORKER_URL + "?tool=get_tradfi_stocks",
+              );
+              return await res.json();
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
         };
 
         const okxFuncs = {
           get_ticker: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_ticker&instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_ticker&instId=" +
+                  encodeURIComponent(args.instId),
+              );
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_candles: async (args: any) => {
             try {
               const bar = args.bar || "1H";
               const limit = args.limit || 20;
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_candles&instId=" + encodeURIComponent(args.instId) + "&bar=" + bar + "&limit=" + limit);
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_candles&instId=" +
+                  encodeURIComponent(args.instId) +
+                  "&bar=" +
+                  bar +
+                  "&limit=" +
+                  limit,
+              );
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_orderbook: async (args: any) => {
             try {
               const size = args.size || 20;
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_orderbook&instId=" + encodeURIComponent(args.instId) + "&size=" + size);
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_orderbook&instId=" +
+                  encodeURIComponent(args.instId) +
+                  "&size=" +
+                  size,
+              );
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_funding_rate: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_funding_rate&instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_funding_rate&instId=" +
+                  encodeURIComponent(args.instId),
+              );
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_market_overview: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_market_overview&instId=" + encodeURIComponent(args.instId));
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_market_overview&instId=" +
+                  encodeURIComponent(args.instId),
+              );
               const data = await res.json();
               return data;
-            } catch (e) { return { error: String(e) }; }
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
-        
 
           // ===== 股票/指数查询 =====
           get_stock_quote: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_quote&symbol=" + encodeURIComponent(args.symbol));
-              const data = await res.json(); return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_stock_quote&symbol=" +
+                  encodeURIComponent(args.symbol),
+              );
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_stock_chart: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_stock_chart&symbol=" + encodeURIComponent(args.symbol) + "&range=" + (args.range||"1mo"));
-              const data = await res.json(); return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=get_stock_chart&symbol=" +
+                  encodeURIComponent(args.symbol) +
+                  "&range=" +
+                  (args.range || "1mo"),
+              );
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
-          search_stocks: async (args: any) => {
+          search_securities: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=search_securities&keyword=" + encodeURIComponent(args.keyword));
-              const data = await res.json(); return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
+              const res = await fetch(
+                OKX_WORKER_URL +
+                  "?tool=search_securities&keyword=" +
+                  encodeURIComponent(args.keyword),
+              );
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_major_indices: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_major_indices");
-              const data = await res.json(); return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
+              const res = await fetch(
+                OKX_WORKER_URL + "?tool=get_major_indices",
+              );
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
           get_sector_performance: async (args: any) => {
             try {
-              const res = await fetch(OKX_WORKER_URL + "?tool=get_sector_performance");
-              const data = await res.json(); return data?.data || data;
-            } catch (e) { return { error: String(e) }; }
+              const res = await fetch(
+                OKX_WORKER_URL + "?tool=get_sector_performance",
+              );
+              const data = await res.json();
+              return data?.data || data;
+            } catch (e) {
+              return { error: String(e) };
+            }
           },
         };
 
-        const pluginData: any = usePluginStore.getState().getAsTools(
+        const pluginData: any = usePluginStore
+          .getState()
+          .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-          const tools: any[] = pluginData[0] || [];
-          const funcs: any = pluginData[1] || {};
-          tools.push(...okxTools, ...tradeTools);
-          Object.assign(funcs, okxFuncs, tradeFuncs);
+        const tools: any[] = pluginData[0] || [];
+        const funcs: any = pluginData[1] || {};
+        tools.push(...okxTools, ...tradfiTools, ...tradeTools);
+        Object.assign(funcs, okxFuncs, tradfiFuncs, tradeFuncs);
         return streamWithThink(
           chatPath,
           requestPayload,
