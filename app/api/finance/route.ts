@@ -592,11 +592,38 @@ async function getPositions() {
 // ========== Yahoo Finance API ==========
 
 async function yq(s: string) {
-  const r = await ft(`${YAHOO_Q}?symbols=${e(s)}`);
-  const b = await r.json();
+  // Yahoo v7 quote API no longer public, use v8 chart API instead
+  const symbols = s
+    .split(",")
+    .map((x: string) => x.trim())
+    .filter(Boolean);
+  const results = await Promise.all(
+    symbols.map(async (sym: string) => {
+      try {
+        const r = await ft(`${YAHOO_C}/${e(sym)}?range=1d&interval=1d`);
+        const b = await r.json();
+        const cd = b.chart?.result?.[0];
+        if (!cd) return null;
+        const m = cd.meta || {};
+        return {
+          type: "stock",
+          symbol: m.symbol || sym,
+          name: m.symbol || sym,
+          exchange: m.exchangeName,
+          quoteType: m.instrumentType,
+          price: m.regularMarketPrice,
+          previousClose: m.previousClose,
+          marketState: m.tradingPeriod?.regular?.end ? "REGULAR" : "CLOSED",
+          currency: m.currency,
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
   return {
-    results: (b.quoteResponse?.result || []).map(fyq),
-    total: (b.quoteResponse?.result || []).length,
+    results: results.filter(Boolean),
+    total: results.filter(Boolean).length,
   };
 }
 
